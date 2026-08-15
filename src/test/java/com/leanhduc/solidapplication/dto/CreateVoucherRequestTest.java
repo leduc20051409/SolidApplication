@@ -20,7 +20,13 @@ class CreateVoucherRequestTest {
 
     @Test
     void acceptsValidPercentageVoucher() {
-        CreateVoucherRequest request = new CreateVoucherRequest("SALE10", "PERCENTAGE", 10.0, 0.0);
+        CreateVoucherRequest request =
+                CreateVoucherRequest.builder()
+                        .code("SALE10")
+                        .type("PERCENTAGE")
+                        .discountPercent(10.0)
+                        .discountAmount(0.0)
+                        .build();
 
         assertThat(validator.validate(request)).isEmpty();
     }
@@ -28,14 +34,25 @@ class CreateVoucherRequestTest {
     @Test
     void acceptsValidOneTimeVoucher() {
         CreateVoucherRequest request =
-                new CreateVoucherRequest("ONETIME50K", "ONE_TIME", 0.0, 50_000.0);
+                CreateVoucherRequest.builder()
+                        .code("ONETIME50K")
+                        .type("ONE_TIME")
+                        .discountPercent(0.0)
+                        .discountAmount(50_000.0)
+                        .build();
 
         assertThat(validator.validate(request)).isEmpty();
     }
 
     @Test
     void rejectsInvalidBasicFields() {
-        CreateVoucherRequest request = new CreateVoucherRequest("sale 10", "FIXED", 101.0, -1.0);
+        CreateVoucherRequest request =
+                CreateVoucherRequest.builder()
+                        .code("sale 10")
+                        .type("FIXED")
+                        .discountPercent(101.0)
+                        .discountAmount(-1.0)
+                        .build();
 
         Set<ConstraintViolation<CreateVoucherRequest>> violations = validator.validate(request);
 
@@ -47,7 +64,12 @@ class CreateVoucherRequestTest {
     @Test
     void acceptsPercentageBoundaryValues() {
         CreateVoucherRequest request =
-                new CreateVoucherRequest("SALE100", "PERCENTAGE", 100.0, 0.0);
+                CreateVoucherRequest.builder()
+                        .code("SALE100")
+                        .type("PERCENTAGE")
+                        .discountPercent(100.0)
+                        .discountAmount(0.0)
+                        .build();
 
         assertThat(validator.validate(request)).isEmpty();
     }

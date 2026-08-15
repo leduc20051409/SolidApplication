@@ -24,13 +24,26 @@ class VoucherServiceImplTest {
         VoucherRepository voucherRepository = mock(VoucherRepository.class);
         VoucherServiceImpl service = new VoucherServiceImpl(orderRepository, voucherRepository);
 
-        Order order = new Order(1L, "Nguyen Van A", 500_000);
-        Voucher usedOneTime = new Voucher(null, "ONETIME50K", "ONE_TIME", 0, 50_000, true);
-        Voucher percentage = new Voucher(null, "SALE10", "PERCENTAGE", 10, 0, false);
-        ApplyVoucherRequest request = new ApplyVoucherRequest();
-        request.setVoucherCodes(List.of("ONETIME50K", "SALE10"));
+        Order order =
+                Order.builder().id(1L).customerName("Nguyen Van A").totalAmount(500_000).build();
+        Voucher usedOneTime =
+                Voucher.builder()
+                        .code("ONETIME50K")
+                        .type("ONE_TIME")
+                        .discountAmount(50_000)
+                        .used(true)
+                        .build();
+        Voucher percentage =
+                Voucher.builder()
+                        .code("SALE10")
+                        .type("PERCENTAGE")
+                        .discountPercent(10)
+                        .used(false)
+                        .build();
+        ApplyVoucherRequest request =
+                ApplyVoucherRequest.builder().voucherCodes(List.of("ONETIME50K", "SALE10")).build();
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
         when(voucherRepository.findByCodeIn(request.getVoucherCodes()))
                 .thenReturn(List.of(usedOneTime, percentage));
 
@@ -42,5 +55,34 @@ class VoucherServiceImplTest {
         assertFalse(percentage.isUsed());
         verify(orderRepository).save(order);
         verify(voucherRepository).saveAll(List.of());
+    }
+
+    @Test
+    void appliesVouchersInTheOrderRequestedByTheClient() {
+        OrderRepository orderRepository = mock(OrderRepository.class);
+        VoucherRepository voucherRepository = mock(VoucherRepository.class);
+        VoucherServiceImpl service = new VoucherServiceImpl(orderRepository, voucherRepository);
+
+        Order order =
+                Order.builder().id(1L).customerName("Nguyen Van A").totalAmount(500_000).build();
+        Voucher percentage =
+                Voucher.builder().code("SALE10").type("PERCENTAGE").discountPercent(10).build();
+        Voucher oneTime =
+                Voucher.builder()
+                        .code("ONETIME50K")
+                        .type("ONE_TIME")
+                        .discountAmount(50_000)
+                        .build();
+        ApplyVoucherRequest request =
+                ApplyVoucherRequest.builder().voucherCodes(List.of("SALE10", "ONETIME50K")).build();
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
+        when(voucherRepository.findByCodeIn(request.getVoucherCodes()))
+                .thenReturn(List.of(oneTime, percentage));
+
+        OrderResponse response = service.applyVouchers(1L, request);
+
+        assertEquals(400_000, response.getFinalAmount(), 0.001);
+        assertEquals(List.of("SALE10", "ONETIME50K"), response.getAppliedVouchers());
     }
 }

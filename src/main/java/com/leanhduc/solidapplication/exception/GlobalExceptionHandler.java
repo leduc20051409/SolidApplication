@@ -43,6 +43,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    @ExceptionHandler(UnsupportedOperationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnsupportedOperation(
+            UnsupportedOperationException exception) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ApiResponse<Void> response =
+                ApiResponse.failure(
+                        status.value(), exception.getMessage(), "UNSUPPORTED_OPERATION", null);
+        return ResponseEntity.status(status).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
         log.error("Unexpected error", exception);

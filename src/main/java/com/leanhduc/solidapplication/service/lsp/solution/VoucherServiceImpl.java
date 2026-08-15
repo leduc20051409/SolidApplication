@@ -7,6 +7,7 @@ import com.leanhduc.solidapplication.model.Order;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
 import com.leanhduc.solidapplication.repository.VoucherRepository;
+import com.leanhduc.solidapplication.service.VoucherOrderer;
 import com.leanhduc.solidapplication.service.VoucherService;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class VoucherServiceImpl implements VoucherService {
     public OrderResponse applyVouchers(Long orderId, ApplyVoucherRequest request) {
         Order order =
                 orderRepository
-                        .findById(orderId)
+                        .findByIdForUpdate(orderId)
                         .orElseThrow(
                                 () ->
                                         new ResourceNotFoundException(
@@ -38,14 +39,21 @@ public class VoucherServiceImpl implements VoucherService {
         double originalAmount = order.getTotalAmount();
         double currentAmount = originalAmount;
 
-        List<Voucher> vouchers = voucherRepository.findByCodeIn(request.getVoucherCodes());
+        List<Voucher> fetchedVouchers = voucherRepository.findByCodeIn(request.getVoucherCodes());
+        List<Voucher> vouchers =
+                VoucherOrderer.followRequestOrder(request.getVoucherCodes(), fetchedVouchers);
         List<String> appliedVouchers = new ArrayList<>();
         List<String> rejectedVouchers = new ArrayList<>();
         List<Voucher> updatedVouchers = new ArrayList<>();
 
         for (Voucher voucherModel : vouchers) {
             VoucherStrategy strategy = createStrategy(voucherModel);
-            Order tempOrder = new Order(order.getId(), order.getCustomerName(), currentAmount);
+            Order tempOrder =
+                    Order.builder()
+                            .id(order.getId())
+                            .customerName(order.getCustomerName())
+                            .totalAmount(currentAmount)
+                            .build();
             VoucherApplicationResult result = strategy.apply(tempOrder);
 
             if (result.applied()) {
@@ -64,23 +72,28 @@ public class VoucherServiceImpl implements VoucherService {
         orderRepository.save(order);
         voucherRepository.saveAll(updatedVouchers);
 
-        return new OrderResponse(
-                order.getId(),
-                order.getCustomerName(),
-                originalAmount,
-                currentAmount,
-                appliedVouchers,
-                rejectedVouchers);
+        return OrderResponse.builder()
+                .orderId(order.getId())
+                .customerName(order.getCustomerName())
+                .originalAmount(originalAmount)
+                .finalAmount(currentAmount)
+                .appliedVouchers(appliedVouchers)
+                .rejectedVouchers(rejectedVouchers)
+                .build();
     }
 
     private VoucherStrategy createStrategy(Voucher voucherModel) {
         if ("PERCENTAGE".equalsIgnoreCase(voucherModel.getType())) {
-            return new PercentageVoucher(voucherModel.getCode(), voucherModel.getDiscountPercent());
+            return PercentageVoucher.builder()
+                    .code(voucherModel.getCode())
+                    .discountPercent(voucherModel.getDiscountPercent())
+                    .build();
         } else if ("ONE_TIME".equalsIgnoreCase(voucherModel.getType())) {
-            return new OneTimeVoucher(
-                    voucherModel.getCode(),
-                    voucherModel.getDiscountAmount(),
-                    voucherModel.isUsed());
+            return OneTimeVoucher.builder()
+                    .code(voucherModel.getCode())
+                    .discountAmount(voucherModel.getDiscountAmount())
+                    .used(voucherModel.isUsed())
+                    .build();
         }
         throw new IllegalArgumentException("Loại voucher không hợp lệ: " + voucherModel.getType());
     }

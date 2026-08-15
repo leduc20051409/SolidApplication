@@ -14,11 +14,12 @@ class VoucherStrategyLspTest {
 
     @Test
     void everyStrategyCanReplaceTheParentContract() {
-        Order order = new Order(1L, "Nguyen Van A", 500_000);
+        Order order =
+                Order.builder().id(1L).customerName("Nguyen Van A").totalAmount(500_000).build();
         List<VoucherStrategy> strategies =
                 List.of(
-                        new PercentageVoucher("SALE15", 15),
-                        new OneTimeVoucher("ONETIME50K", 50_000));
+                        PercentageVoucher.builder().code("SALE15").discountPercent(15).build(),
+                        OneTimeVoucher.builder().code("ONETIME50K").discountAmount(50_000).build());
 
         for (VoucherStrategy strategy : strategies) {
             VoucherApplicationResult result = assertDoesNotThrow(() -> apply(strategy, order));
@@ -33,8 +34,14 @@ class VoucherStrategyLspTest {
 
     @Test
     void usedOneTimeVoucherReturnsRejectionInsteadOfBreakingTheContract() {
-        Order order = new Order(1L, "Nguyen Van A", 500_000);
-        VoucherStrategy strategy = new OneTimeVoucher("ONETIME50K", 50_000, true);
+        Order order =
+                Order.builder().id(1L).customerName("Nguyen Van A").totalAmount(500_000).build();
+        VoucherStrategy strategy =
+                OneTimeVoucher.builder()
+                        .code("ONETIME50K")
+                        .discountAmount(50_000)
+                        .used(true)
+                        .build();
 
         VoucherApplicationResult result = assertDoesNotThrow(() -> apply(strategy, order));
 
@@ -45,8 +52,10 @@ class VoucherStrategyLspTest {
 
     @Test
     void oneTimeVoucherCanBeCalledAgainWithoutBreakingTheParentContract() {
-        Order order = new Order(1L, "Nguyen Van A", 500_000);
-        VoucherStrategy strategy = new OneTimeVoucher("ONETIME50K", 50_000);
+        Order order =
+                Order.builder().id(1L).customerName("Nguyen Van A").totalAmount(500_000).build();
+        VoucherStrategy strategy =
+                OneTimeVoucher.builder().code("ONETIME50K").discountAmount(50_000).build();
 
         VoucherApplicationResult firstResult = assertDoesNotThrow(() -> apply(strategy, order));
         VoucherApplicationResult secondResult = assertDoesNotThrow(() -> apply(strategy, order));
@@ -60,8 +69,12 @@ class VoucherStrategyLspTest {
 
     @Test
     void strategiesRejectInvalidDiscountConfiguration() {
-        assertThrows(IllegalArgumentException.class, () -> new PercentageVoucher("INVALID", 101));
-        assertThrows(IllegalArgumentException.class, () -> new OneTimeVoucher("INVALID", -1));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PercentageVoucher.builder().code("INVALID").discountPercent(101).build());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> OneTimeVoucher.builder().code("INVALID").discountAmount(-1).build());
     }
 
     private VoucherApplicationResult apply(VoucherStrategy strategy, Order order) {

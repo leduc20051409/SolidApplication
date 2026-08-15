@@ -1,5 +1,8 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
+import lombok.Builder;
+
+@Builder
 public record VoucherApplicationResult(
         boolean applied, double finalAmount, boolean shouldMarkUsed) {
 
@@ -14,10 +17,18 @@ public record VoucherApplicationResult(
     }
 
     public static VoucherApplicationResult applied(double finalAmount, boolean shouldMarkUsed) {
-        return new VoucherApplicationResult(true, finalAmount, shouldMarkUsed);
+        return VoucherApplicationResult.builder()
+                .applied(true)
+                .finalAmount(finalAmount)
+                .shouldMarkUsed(shouldMarkUsed)
+                .build();
     }
 
     public static VoucherApplicationResult rejected(double currentAmount) {
-        return new VoucherApplicationResult(false, currentAmount, false);
+        return VoucherApplicationResult.builder()
+                .applied(false)
+                .finalAmount(currentAmount)
+                .shouldMarkUsed(false)
+                .build();
     }
 }

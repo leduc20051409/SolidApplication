@@ -2,12 +2,14 @@ package com.leanhduc.solidapplication.service.lsp.violation;
 
 import com.leanhduc.solidapplication.model.Order;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PercentageVoucherViolation extends VoucherViolation {
     double discountPercent;
 
+    @Builder
     public PercentageVoucherViolation(String code, double discountPercent) {
         super(code);
         this.discountPercent = discountPercent;

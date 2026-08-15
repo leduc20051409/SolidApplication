@@ -1,4 +1,4 @@
-package com.leanhduc.solidapplication.controller;
+package com.leanhduc.solidapplication.controller.lsp;
 
 import com.leanhduc.solidapplication.dto.ApiResponse;
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
@@ -8,6 +8,7 @@ import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
 import com.leanhduc.solidapplication.repository.VoucherRepository;
 import com.leanhduc.solidapplication.service.VoucherService;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
@@ -38,13 +39,28 @@ public class LspController {
         orderRepository.deleteAll();
         voucherRepository.deleteAll();
 
-        Order order = orderRepository.save(new Order(null, "Nguyen Van A", 500_000));
+        Order order =
+                orderRepository.save(
+                        Order.builder().customerName("Nguyen Van A").totalAmount(500_000).build());
 
         Voucher v1 =
-                voucherRepository.save(new Voucher(null, "SALE10", "PERCENTAGE", 10, 0, false));
+                voucherRepository.save(
+                        Voucher.builder()
+                                .code("SALE10")
+                                .type("PERCENTAGE")
+                                .discountPercent(10)
+                                .discountAmount(0)
+                                .used(false)
+                                .build());
         Voucher v2 =
                 voucherRepository.save(
-                        new Voucher(null, "ONETIME50K", "ONE_TIME", 0, 50_000, false));
+                        Voucher.builder()
+                                .code("ONETIME50K")
+                                .type("ONE_TIME")
+                                .discountPercent(0)
+                                .discountAmount(50_000)
+                                .used(false)
+                                .build());
 
         Map<String, Object> data = Map.of("order", order, "vouchers", List.of(v1, v2));
         return ResponseEntity.ok(
@@ -57,7 +73,7 @@ public class LspController {
     // =========================================================
     @PostMapping("/violation/apply-vouchers/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponse>> applyVouchersViolation(
-            @PathVariable Long orderId, @RequestBody ApplyVoucherRequest request) {
+            @PathVariable Long orderId, @Valid @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = violationService.applyVouchers(orderId, request);
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -70,7 +86,7 @@ public class LspController {
     // =========================================================
     @PostMapping("/solution/apply-vouchers/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponse>> applyVouchersSolution(
-            @PathVariable Long orderId, @RequestBody ApplyVoucherRequest request) {
+            @PathVariable Long orderId, @Valid @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = solutionService.applyVouchers(orderId, request);
         return ResponseEntity.ok(
                 ApiResponse.success(200, "Áp dụng voucher theo phiên bản LSP thành công", data));

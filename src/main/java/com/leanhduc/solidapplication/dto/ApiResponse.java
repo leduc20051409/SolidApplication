@@ -32,7 +32,7 @@ public class ApiResponse<T> {
                 .success(false)
                 .code(code)
                 .message(message)
-                .error(new ApiError(errorCode, details))
+                .error(ApiError.builder().code(errorCode).details(details).build())
                 .build();
     }
 
