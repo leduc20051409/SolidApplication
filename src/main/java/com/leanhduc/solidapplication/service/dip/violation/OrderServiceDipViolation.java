@@ -1,5 +1,7 @@
 package com.leanhduc.solidapplication.service.dip.violation;
 
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class OrderServiceDipViolation {
 
     private void validateTotalAmount(double totalAmount) {
         if (!Double.isFinite(totalAmount) || totalAmount < 0) {
-            throw new IllegalArgumentException("Tổng tiền đơn hàng phải hữu hạn và không âm");
+            throw new AppException(ErrorCode.INVALID_ORDER_AMOUNT);
         }
     }
 }

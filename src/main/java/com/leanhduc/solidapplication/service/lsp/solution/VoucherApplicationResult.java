@@ -1,5 +1,7 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import lombok.Builder;
 
 @Builder
@@ -8,11 +10,10 @@ public record VoucherApplicationResult(
 
     public VoucherApplicationResult {
         if (!Double.isFinite(finalAmount) || finalAmount < 0) {
-            throw new IllegalArgumentException("Số tiền sau giảm giá phải hữu hạn và không âm");
+            throw new AppException(ErrorCode.INVALID_VOUCHER_RESULT);
         }
         if (!applied && shouldMarkUsed) {
-            throw new IllegalArgumentException(
-                    "Voucher bị từ chối không thể được đánh dấu đã dùng");
+            throw new AppException(ErrorCode.INVALID_VOUCHER_RESULT);
         }
     }
 

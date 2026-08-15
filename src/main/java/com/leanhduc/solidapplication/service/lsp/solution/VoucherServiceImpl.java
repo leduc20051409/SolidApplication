@@ -2,7 +2,8 @@ package com.leanhduc.solidapplication.service.lsp.solution;
 
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
-import com.leanhduc.solidapplication.exception.ResourceNotFoundException;
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
@@ -31,10 +32,7 @@ public class VoucherServiceImpl implements VoucherService {
         Order order =
                 orderRepository
                         .findByIdForUpdate(orderId)
-                        .orElseThrow(
-                                () ->
-                                        new ResourceNotFoundException(
-                                                "Không tìm thấy đơn hàng ID: " + orderId));
+                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         double originalAmount = order.getTotalAmount();
         double currentAmount = originalAmount;
@@ -95,6 +93,6 @@ public class VoucherServiceImpl implements VoucherService {
                     .used(voucherModel.isUsed())
                     .build();
         }
-        throw new IllegalArgumentException("Loại voucher không hợp lệ: " + voucherModel.getType());
+        throw new AppException(ErrorCode.INVALID_VOUCHER_TYPE);
     }
 }

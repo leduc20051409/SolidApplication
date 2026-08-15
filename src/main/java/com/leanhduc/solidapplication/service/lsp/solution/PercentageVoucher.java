@@ -1,5 +1,7 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +15,7 @@ public class PercentageVoucher implements VoucherStrategy {
     @Builder
     public PercentageVoucher(String code, double discountPercent) {
         if (!Double.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
-            throw new IllegalArgumentException("Phần trăm giảm phải nằm trong khoảng từ 0 đến 100");
+            throw new AppException(ErrorCode.INVALID_DISCOUNT_PERCENT);
         }
         this.code = code;
         this.discountPercent = discountPercent;

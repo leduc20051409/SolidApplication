@@ -1,6 +1,8 @@
 package com.leanhduc.solidapplication.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.enums.ResponseCode;
 import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,17 +24,24 @@ public class ApiResponse<T> {
 
     @Builder.Default final Instant timestamp = Instant.now();
 
-    public static <T> ApiResponse<T> success(int code, String message, T data) {
-        return ApiResponse.<T>builder().code(code).message(message).data(data).build();
+    public static <T> ApiResponse<T> success(ResponseCode responseCode, T data) {
+        return ApiResponse.<T>builder()
+                .code(responseCode.getCode())
+                .message(responseCode.getMessage())
+                .data(data)
+                .build();
     }
 
-    public static ApiResponse<Void> failure(
-            int code, String message, String errorCode, Object details) {
+    public static ApiResponse<Void> failure(ErrorCode errorCode, Object details) {
+        return failure(errorCode, errorCode.getCode(), details);
+    }
+
+    public static ApiResponse<Void> failure(ErrorCode errorCode, int responseCode, Object details) {
         return ApiResponse.<Void>builder()
                 .success(false)
-                .code(code)
-                .message(message)
-                .error(ApiError.builder().code(errorCode).details(details).build())
+                .code(responseCode)
+                .message(errorCode.getMessage())
+                .error(ApiError.builder().code(errorCode.name()).details(details).build())
                 .build();
     }
 

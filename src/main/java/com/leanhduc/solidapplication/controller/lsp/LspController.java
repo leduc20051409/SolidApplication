@@ -3,6 +3,7 @@ package com.leanhduc.solidapplication.controller.lsp;
 import com.leanhduc.solidapplication.dto.ApiResponse;
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
+import com.leanhduc.solidapplication.enums.ResponseCode;
 import com.leanhduc.solidapplication.model.Order;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
@@ -63,8 +64,7 @@ public class LspController {
                                 .build());
 
         Map<String, Object> data = Map.of("order", order, "vouchers", List.of(v1, v2));
-        return ResponseEntity.ok(
-                ApiResponse.success(200, "Khởi tạo dữ liệu MySQL thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.DATABASE_INITIALIZED, data));
     }
 
     // =========================================================
@@ -75,9 +75,7 @@ public class LspController {
     public ResponseEntity<ApiResponse<OrderResponse>> applyVouchersViolation(
             @PathVariable Long orderId, @Valid @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = violationService.applyVouchers(orderId, request);
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        200, "Áp dụng voucher theo phiên bản vi phạm LSP thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.LSP_VIOLATION_APPLIED, data));
     }
 
     // =========================================================
@@ -88,7 +86,6 @@ public class LspController {
     public ResponseEntity<ApiResponse<OrderResponse>> applyVouchersSolution(
             @PathVariable Long orderId, @Valid @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = solutionService.applyVouchers(orderId, request);
-        return ResponseEntity.ok(
-                ApiResponse.success(200, "Áp dụng voucher theo phiên bản LSP thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.LSP_SOLUTION_APPLIED, data));
     }
 }

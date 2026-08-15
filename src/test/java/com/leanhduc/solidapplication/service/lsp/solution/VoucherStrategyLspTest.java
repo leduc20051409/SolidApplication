@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -70,10 +71,10 @@ class VoucherStrategyLspTest {
     @Test
     void strategiesRejectInvalidDiscountConfiguration() {
         assertThrows(
-                IllegalArgumentException.class,
+                AppException.class,
                 () -> PercentageVoucher.builder().code("INVALID").discountPercent(101).build());
         assertThrows(
-                IllegalArgumentException.class,
+                AppException.class,
                 () -> OneTimeVoucher.builder().code("INVALID").discountAmount(-1).build());
     }
 

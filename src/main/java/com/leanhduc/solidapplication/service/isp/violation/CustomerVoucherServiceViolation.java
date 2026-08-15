@@ -3,6 +3,8 @@ package com.leanhduc.solidapplication.service.isp.violation;
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.CreateVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.service.VoucherService;
 import lombok.AccessLevel;
@@ -25,11 +27,11 @@ public class CustomerVoucherServiceViolation implements VoucherOperationsViolati
 
     @Override
     public Voucher createVoucher(CreateVoucherRequest request) {
-        throw new UnsupportedOperationException("Khách hàng không được tạo voucher");
+        throw new AppException(ErrorCode.CUSTOMER_CANNOT_CREATE_VOUCHER);
     }
 
     @Override
     public Voucher resetVoucher(String code) {
-        throw new UnsupportedOperationException("Khách hàng không được reset voucher");
+        throw new AppException(ErrorCode.CUSTOMER_CANNOT_RESET_VOUCHER);
     }
 }

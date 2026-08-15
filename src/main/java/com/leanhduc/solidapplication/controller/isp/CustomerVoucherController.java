@@ -3,6 +3,7 @@ package com.leanhduc.solidapplication.controller.isp;
 import com.leanhduc.solidapplication.dto.ApiResponse;
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
+import com.leanhduc.solidapplication.enums.ResponseCode;
 import com.leanhduc.solidapplication.service.isp.solution.VoucherApplicationService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -27,7 +28,6 @@ public class CustomerVoucherController {
     public ResponseEntity<ApiResponse<OrderResponse>> applyVouchers(
             @PathVariable Long orderId, @Valid @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = applicationService.applyVouchers(orderId, request);
-        return ResponseEntity.ok(
-                ApiResponse.success(200, "Khách hàng áp dụng voucher thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.CUSTOMER_VOUCHER_APPLIED, data));
     }
 }

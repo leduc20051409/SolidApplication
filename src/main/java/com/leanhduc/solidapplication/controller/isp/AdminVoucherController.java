@@ -2,6 +2,7 @@ package com.leanhduc.solidapplication.controller.isp;
 
 import com.leanhduc.solidapplication.dto.ApiResponse;
 import com.leanhduc.solidapplication.dto.CreateVoucherRequest;
+import com.leanhduc.solidapplication.enums.ResponseCode;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.service.isp.solution.VoucherManagementService;
 import jakarta.validation.Valid;
@@ -28,12 +29,12 @@ public class AdminVoucherController {
     public ResponseEntity<ApiResponse<Voucher>> createVoucher(
             @Valid @RequestBody CreateVoucherRequest request) {
         Voucher data = managementService.createVoucher(request);
-        return ResponseEntity.ok(ApiResponse.success(200, "Admin tạo voucher thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.ADMIN_VOUCHER_CREATED, data));
     }
 
     @PatchMapping("/{code}/reset")
     public ResponseEntity<ApiResponse<Voucher>> resetVoucher(@PathVariable String code) {
         Voucher data = managementService.resetVoucher(code);
-        return ResponseEntity.ok(ApiResponse.success(200, "Admin reset voucher thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.ADMIN_VOUCHER_RESET, data));
     }
 }

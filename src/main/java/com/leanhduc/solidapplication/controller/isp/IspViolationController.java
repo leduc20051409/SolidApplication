@@ -4,6 +4,7 @@ import com.leanhduc.solidapplication.dto.ApiResponse;
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.CreateVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
+import com.leanhduc.solidapplication.enums.ResponseCode;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.service.isp.violation.VoucherOperationsViolation;
 import jakarta.validation.Valid;
@@ -30,20 +31,19 @@ public class IspViolationController {
     public ResponseEntity<ApiResponse<OrderResponse>> applyVouchers(
             @PathVariable Long orderId, @Valid @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = violationService.applyVouchers(orderId, request);
-        return ResponseEntity.ok(
-                ApiResponse.success(200, "Áp dụng voucher bằng interface vi phạm ISP", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.ISP_VIOLATION_APPLIED, data));
     }
 
     @PostMapping("/create-voucher")
     public ResponseEntity<ApiResponse<Voucher>> createVoucher(
             @Valid @RequestBody CreateVoucherRequest request) {
         Voucher data = violationService.createVoucher(request);
-        return ResponseEntity.ok(ApiResponse.success(200, "Tạo voucher thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.VOUCHER_CREATED, data));
     }
 
     @PatchMapping("/reset-voucher/{code}")
     public ResponseEntity<ApiResponse<Voucher>> resetVoucher(@PathVariable String code) {
         Voucher data = violationService.resetVoucher(code);
-        return ResponseEntity.ok(ApiResponse.success(200, "Reset voucher thành công", data));
+        return ResponseEntity.ok(ApiResponse.success(ResponseCode.VOUCHER_RESET, data));
     }
 }

@@ -1,83 +1,104 @@
 package com.leanhduc.solidapplication.exception;
 
 import com.leanhduc.solidapplication.dto.ApiResponse;
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
-@Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
-            ResourceNotFoundException exception) {
-        HttpStatus status = HttpStatus.NOT_FOUND;
-        ApiResponse<Void> response =
-                ApiResponse.failure(
-                        status.value(), exception.getMessage(), "RESOURCE_NOT_FOUND", null);
-        return ResponseEntity.status(status).body(response);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(
-            IllegalArgumentException exception) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        ApiResponse<Void> response =
-                ApiResponse.failure(
-                        status.value(), exception.getMessage(), "INVALID_ARGUMENT", null);
-        return ResponseEntity.status(status).body(response);
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException exception) {
-        HttpStatus status = HttpStatus.CONFLICT;
-        ApiResponse<Void> response =
-                ApiResponse.failure(status.value(), exception.getMessage(), "INVALID_STATE", null);
-        return ResponseEntity.status(status).body(response);
-    }
-
-    @ExceptionHandler(UnsupportedOperationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleUnsupportedOperation(
-            UnsupportedOperationException exception) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        ApiResponse<Void> response =
-                ApiResponse.failure(
-                        status.value(), exception.getMessage(), "UNSUPPORTED_OPERATION", null);
-        return ResponseEntity.status(status).body(response);
-    }
+@Slf4j
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
-        log.error("Unexpected error", exception);
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        ApiResponse<Void> response =
-                ApiResponse.failure(
-                        status.value(),
-                        "Đã xảy ra lỗi không mong muốn",
-                        "INTERNAL_SERVER_ERROR",
-                        null);
-        return ResponseEntity.status(status).body(response);
+        if (exception instanceof ErrorResponse errorResponse
+                && errorResponse.getStatusCode().is4xxClientError()) {
+            ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
+            return ResponseEntity.status(errorResponse.getStatusCode())
+                    .body(
+                            ApiResponse.failure(
+                                    errorCode, errorResponse.getStatusCode().value(), null));
+        }
+
+        log.error("Unexpected exception", exception);
+
+        ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
+        return ResponseEntity.status(errorCode.getStatusCode())
+                .body(ApiResponse.failure(errorCode, null));
     }
 
-    @Override
-    protected ResponseEntity<Object> handleExceptionInternal(
-            Exception exception,
-            Object body,
-            HttpHeaders headers,
-            HttpStatusCode statusCode,
-            WebRequest request) {
-        HttpStatus status = HttpStatus.resolve(statusCode.value());
-        String message = status != null ? status.getReasonPhrase() : "Yêu cầu không hợp lệ";
-        ApiResponse<Void> response =
-                ApiResponse.failure(
-                        statusCode.value(), message, "HTTP_" + statusCode.value(), null);
-        return ResponseEntity.status(statusCode).headers(headers).body(response);
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAppException(AppException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+        return ResponseEntity.status(errorCode.getStatusCode())
+                .body(ApiResponse.failure(errorCode, null));
+    }
+
+    @ExceptionHandler({
+        MethodArgumentNotValidException.class,
+        HandlerMethodValidationException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(Exception exception) {
+        Map<String, String> details = collectValidationDetails(exception);
+
+        ErrorCode errorCode = ErrorCode.VALIDATION_ERROR;
+        return ResponseEntity.status(errorCode.getStatusCode())
+                .body(ApiResponse.failure(errorCode, details));
+    }
+
+    private Map<String, String> collectValidationDetails(Exception exception) {
+        if (exception instanceof MethodArgumentNotValidException bodyValidationException) {
+            return bodyValidationException.getBindingResult().getFieldErrors().stream()
+                    .collect(
+                            Collectors.toMap(
+                                    FieldError::getField,
+                                    this::resolveValidationMessage,
+                                    (firstMessage, ignoredMessage) -> firstMessage,
+                                    LinkedHashMap::new));
+        }
+
+        HandlerMethodValidationException methodValidationException =
+                (HandlerMethodValidationException) exception;
+        Map<String, String> details = new LinkedHashMap<>();
+        methodValidationException
+                .getParameterValidationResults()
+                .forEach(
+                        result -> {
+                            String parameterName = result.getMethodParameter().getParameterName();
+                            result.getResolvableErrors().stream()
+                                    .findFirst()
+                                    .ifPresent(
+                                            error ->
+                                                    details.put(
+                                                            parameterName,
+                                                            resolveValidationMessage(
+                                                                    error.getDefaultMessage())));
+                        });
+        return details;
+    }
+
+    private String resolveValidationMessage(FieldError fieldError) {
+        return resolveValidationMessage(fieldError.getDefaultMessage());
+    }
+
+    private String resolveValidationMessage(String errorCodeName) {
+        if (errorCodeName == null) {
+            return ErrorCode.VALIDATION_ERROR.getMessage();
+        }
+
+        try {
+            return ErrorCode.valueOf(errorCodeName).getMessage();
+        } catch (IllegalArgumentException exception) {
+            return errorCodeName;
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.leanhduc.solidapplication.service.lsp.violation;
 
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import lombok.Builder;
 
@@ -20,7 +22,7 @@ public class OneTimeVoucherViolation extends VoucherViolation {
     public double applyDiscount(Order order) {
         if (used) {
             // Vi phạm LSP: Ném Exception sập API
-            throw new IllegalStateException("VI PHẠM LSP: Voucher [" + code + "] đã được sử dụng!");
+            throw new AppException(ErrorCode.VOUCHER_ALREADY_USED);
         }
         // Ở đây có thể trả về double thay vì ném Exception
         used = true;

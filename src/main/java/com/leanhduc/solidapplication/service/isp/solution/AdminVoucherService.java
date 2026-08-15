@@ -1,7 +1,8 @@
 package com.leanhduc.solidapplication.service.isp.solution;
 
 import com.leanhduc.solidapplication.dto.CreateVoucherRequest;
-import com.leanhduc.solidapplication.exception.ResourceNotFoundException;
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.VoucherRepository;
 import lombok.AccessLevel;
@@ -35,10 +36,7 @@ public class AdminVoucherService implements VoucherManagementService {
         Voucher voucher =
                 voucherRepository
                         .findByCode(code)
-                        .orElseThrow(
-                                () ->
-                                        new ResourceNotFoundException(
-                                                "Không tìm thấy voucher: " + code));
+                        .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
         voucher.setUsed(false);
         return voucherRepository.save(voucher);

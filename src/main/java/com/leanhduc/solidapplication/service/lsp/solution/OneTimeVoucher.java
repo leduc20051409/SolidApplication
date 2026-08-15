@@ -1,5 +1,7 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,7 +17,7 @@ public class OneTimeVoucher implements VoucherStrategy {
     @Builder
     public OneTimeVoucher(String code, double discountAmount, boolean used) {
         if (!Double.isFinite(discountAmount) || discountAmount < 0) {
-            throw new IllegalArgumentException("Số tiền giảm phải hữu hạn và không âm");
+            throw new AppException(ErrorCode.INVALID_DISCOUNT_AMOUNT);
         }
         this.code = code;
         this.discountAmount = discountAmount;
