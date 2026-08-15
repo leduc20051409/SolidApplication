@@ -8,6 +8,9 @@ import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
 import com.leanhduc.solidapplication.repository.VoucherRepository;
 import com.leanhduc.solidapplication.service.VoucherService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,15 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service("lspViolationVoucherService")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VoucherServiceViolationImpl implements VoucherService {
 
-    private final OrderRepository orderRepository;
-    private final VoucherRepository voucherRepository;
-
-    public VoucherServiceViolationImpl(OrderRepository orderRepository, VoucherRepository voucherRepository) {
-        this.orderRepository = orderRepository;
-        this.voucherRepository = voucherRepository;
-    }
+    OrderRepository orderRepository;
+    VoucherRepository voucherRepository;
 
     @Override
     @Transactional

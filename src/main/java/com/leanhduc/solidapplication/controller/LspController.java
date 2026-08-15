@@ -23,11 +23,6 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LspController {
 
-    static final int SUCCESS_CODE = 200;
-    static final String INIT_SUCCESS_MESSAGE = "Khởi tạo dữ liệu MySQL thành công";
-    static final String VIOLATION_SUCCESS_MESSAGE = "Áp dụng voucher theo phiên bản vi phạm LSP thành công";
-    static final String SOLUTION_SUCCESS_MESSAGE = "Áp dụng voucher theo phiên bản LSP thành công";
-
     @Qualifier("lspSolutionVoucherService")
     VoucherService solutionService;
 
@@ -54,7 +49,7 @@ public class LspController {
                 "order", order,
                 "vouchers", List.of(v1, v2)
         );
-        return ApiResponse.success(SUCCESS_CODE, INIT_SUCCESS_MESSAGE, data);
+        return ApiResponse.success(200, "Khởi tạo dữ liệu MySQL thành công", data);
     }
 
     // =========================================================
@@ -65,7 +60,11 @@ public class LspController {
     public ApiResponse<OrderResponse> applyVouchersViolation(
             @PathVariable Long orderId, @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = violationService.applyVouchers(orderId, request);
-        return ApiResponse.success(SUCCESS_CODE, VIOLATION_SUCCESS_MESSAGE, data);
+        return ApiResponse.success(
+                200,
+                "Áp dụng voucher theo phiên bản vi phạm LSP thành công",
+                data
+        );
     }
 
     // =========================================================
@@ -76,6 +75,10 @@ public class LspController {
     public ApiResponse<OrderResponse> applyVouchersSolution(
             @PathVariable Long orderId, @RequestBody ApplyVoucherRequest request) {
         OrderResponse data = solutionService.applyVouchers(orderId, request);
-        return ApiResponse.success(SUCCESS_CODE, SOLUTION_SUCCESS_MESSAGE, data);
+        return ApiResponse.success(
+                200,
+                "Áp dụng voucher theo phiên bản LSP thành công",
+                data
+        );
     }
 }
