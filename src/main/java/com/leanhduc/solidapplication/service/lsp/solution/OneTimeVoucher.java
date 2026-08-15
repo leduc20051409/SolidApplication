@@ -12,20 +12,23 @@ public class OneTimeVoucher implements VoucherStrategy {
     }
 
     public OneTimeVoucher(String code, double discountAmount, boolean used) {
+        if (!Double.isFinite(discountAmount) || discountAmount < 0) {
+            throw new IllegalArgumentException("Số tiền giảm giá phải hữu hạn và không âm");
+        }
         this.code = code;
         this.discountAmount = discountAmount;
         this.used = used;
     }
 
     @Override
-    public boolean canApply(Order order) {
-        return !used; // Báo false thay vì ném Exception
-    }
+    public VoucherApplicationResult apply(Order order) {
+        if (used) {
+            return VoucherApplicationResult.rejected(order.getTotalAmount());
+        }
 
-    @Override
-    public double applyDiscount(Order order) {
         used = true;
-        return Math.max(order.getTotalAmount() - discountAmount, 0);
+        double finalAmount = Math.max(order.getTotalAmount() - discountAmount, 0);
+        return VoucherApplicationResult.applied(finalAmount, true);
     }
 
     public boolean isUsed() {

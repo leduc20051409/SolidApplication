@@ -2,8 +2,8 @@ package com.leanhduc.solidapplication.service.lsp.solution;
 
 import com.leanhduc.solidapplication.model.Order;
 
-// CHUẨN LSP: Interface định nghĩa thuật toán giảm giá (Strategy)
+// Mọi implementation đều thay thế được nhau: với Order hợp lệ, apply() luôn trả về
+// kết quả hợp lệ và dùng rejected thay cho exception khi voucher không thể áp dụng.
 public interface VoucherStrategy {
-    boolean canApply(Order order);
-    double applyDiscount(Order order);
+    VoucherApplicationResult apply(Order order);
 }

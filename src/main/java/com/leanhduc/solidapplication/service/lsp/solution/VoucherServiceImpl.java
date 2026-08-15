@@ -42,11 +42,14 @@ public class VoucherServiceImpl implements VoucherService {
         for (Voucher voucherModel : vouchers) {
             VoucherStrategy strategy = createStrategy(voucherModel);
             Order tempOrder = new Order(order.getId(), order.getCustomerName(), currentAmount);
+            VoucherApplicationResult result = strategy.apply(tempOrder);
 
-            if (strategy.canApply(tempOrder)) {
-                currentAmount = strategy.applyDiscount(tempOrder);
-                voucherModel.setUsed(true);
-                updatedVouchers.add(voucherModel);
+            if (result.applied()) {
+                currentAmount = result.finalAmount();
+                if (result.shouldMarkUsed()) {
+                    voucherModel.setUsed(true);
+                    updatedVouchers.add(voucherModel);
+                }
                 appliedVouchers.add(voucherModel.getCode());
             } else {
                 rejectedVouchers.add(voucherModel.getCode());

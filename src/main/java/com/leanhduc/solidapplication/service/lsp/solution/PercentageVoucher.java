@@ -7,18 +7,17 @@ public class PercentageVoucher implements VoucherStrategy {
     private final double discountPercent;
 
     public PercentageVoucher(String code, double discountPercent) {
+        if (!Double.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+            throw new IllegalArgumentException("Phần trăm giảm giá phải nằm trong khoảng 0 đến 100");
+        }
         this.code = code;
         this.discountPercent = discountPercent;
     }
 
     @Override
-    public boolean canApply(Order order) {
-        return true;
-    }
-
-    @Override
-    public double applyDiscount(Order order) {
+    public VoucherApplicationResult apply(Order order) {
         double discount = order.getTotalAmount() * (discountPercent / 100);
-        return order.getTotalAmount() - discount;
+        double finalAmount = order.getTotalAmount() - discount;
+        return VoucherApplicationResult.applied(finalAmount, false);
     }
 }
