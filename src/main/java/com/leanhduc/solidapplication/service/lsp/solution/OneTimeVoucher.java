@@ -1,24 +1,19 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
 import com.leanhduc.solidapplication.model.Order;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
+@RequiredArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class OneTimeVoucher implements VoucherStrategy {
-    private final String code;
-    private final double discountAmount;
-    private boolean used;
-
-    public OneTimeVoucher(String code, double discountAmount) {
-        this(code, discountAmount, false);
-    }
-
-    public OneTimeVoucher(String code, double discountAmount, boolean used) {
-        if (!Double.isFinite(discountAmount) || discountAmount < 0) {
-            throw new IllegalArgumentException("Số tiền giảm giá phải hữu hạn và không âm");
-        }
-        this.code = code;
-        this.discountAmount = discountAmount;
-        this.used = used;
-    }
+    final String code;
+    final double discountAmount;
+    @Getter boolean used;
 
     @Override
     public VoucherApplicationResult apply(Order order) {
@@ -29,9 +24,5 @@ public class OneTimeVoucher implements VoucherStrategy {
         used = true;
         double finalAmount = Math.max(order.getTotalAmount() - discountAmount, 0);
         return VoucherApplicationResult.applied(finalAmount, true);
-    }
-
-    public boolean isUsed() {
-        return used;
     }
 }

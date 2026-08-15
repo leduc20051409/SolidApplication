@@ -24,9 +24,8 @@ class ApiResponseTest {
 
     @Test
     void shouldCreateFailureResponse() {
-        ApiResponse<Void> response = ApiResponse.failure(
-                400, "Dữ liệu không hợp lệ", "INVALID_ARGUMENT", "orderId"
-        );
+        ApiResponse<Void> response =
+                ApiResponse.failure(400, "Dữ liệu không hợp lệ", "INVALID_ARGUMENT", "orderId");
 
         assertFalse(response.isSuccess());
         assertEquals(400, response.getCode());

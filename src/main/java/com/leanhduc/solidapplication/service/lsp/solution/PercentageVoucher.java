@@ -1,18 +1,15 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
 import com.leanhduc.solidapplication.model.Order;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PercentageVoucher implements VoucherStrategy {
-    private final String code;
-    private final double discountPercent;
-
-    public PercentageVoucher(String code, double discountPercent) {
-        if (!Double.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
-            throw new IllegalArgumentException("Phần trăm giảm giá phải nằm trong khoảng 0 đến 100");
-        }
-        this.code = code;
-        this.discountPercent = discountPercent;
-    }
+    String code;
+    double discountPercent;
 
     @Override
     public VoucherApplicationResult apply(Order order) {

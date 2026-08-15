@@ -15,10 +15,10 @@ class VoucherStrategyLspTest {
     @Test
     void everyStrategyCanReplaceTheParentContract() {
         Order order = new Order(1L, "Nguyen Van A", 500_000);
-        List<VoucherStrategy> strategies = List.of(
-                new PercentageVoucher("SALE15", 15),
-                new OneTimeVoucher("ONETIME50K", 50_000)
-        );
+        List<VoucherStrategy> strategies =
+                List.of(
+                        new PercentageVoucher("SALE15", 15),
+                        new OneTimeVoucher("ONETIME50K", 50_000));
 
         for (VoucherStrategy strategy : strategies) {
             VoucherApplicationResult result = assertDoesNotThrow(() -> apply(strategy, order));
@@ -60,10 +60,8 @@ class VoucherStrategyLspTest {
 
     @Test
     void strategiesRejectInvalidDiscountConfiguration() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new PercentageVoucher("INVALID", 101));
-        assertThrows(IllegalArgumentException.class,
-                () -> new OneTimeVoucher("INVALID", -1));
+        assertThrows(IllegalArgumentException.class, () -> new PercentageVoucher("INVALID", 101));
+        assertThrows(IllegalArgumentException.class, () -> new OneTimeVoucher("INVALID", -1));
     }
 
     private VoucherApplicationResult apply(VoucherStrategy strategy, Order order) {

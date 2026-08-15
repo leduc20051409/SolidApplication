@@ -13,23 +13,17 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApiResponse<T> {
 
-    @Builder.Default
-    final boolean success = true;
+    @Builder.Default final boolean success = true;
 
     final int code;
     final String message;
     final T data;
     final ApiError error;
 
-    @Builder.Default
-    final Instant timestamp = Instant.now();
+    @Builder.Default final Instant timestamp = Instant.now();
 
     public static <T> ApiResponse<T> success(int code, String message, T data) {
-        return ApiResponse.<T>builder()
-                .code(code)
-                .message(message)
-                .data(data)
-                .build();
+        return ApiResponse.<T>builder().code(code).message(message).data(data).build();
     }
 
     public static ApiResponse<Void> failure(
