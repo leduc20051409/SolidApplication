@@ -7,6 +7,9 @@ import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
 import com.leanhduc.solidapplication.repository.VoucherRepository;
 import com.leanhduc.solidapplication.service.VoucherService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,22 +19,18 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/lsp")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LspController {
 
-    private final VoucherService solutionService;
-    private final VoucherService violationService;
-    private final OrderRepository orderRepository;
-    private final VoucherRepository voucherRepository;
+    @Qualifier("lspSolutionVoucherService")
+    VoucherService solutionService;
 
-    public LspController(@Qualifier("lspSolutionVoucherService") VoucherService solutionService,
-                         @Qualifier("lspViolationVoucherService") VoucherService violationService,
-                         OrderRepository orderRepository,
-                         VoucherRepository voucherRepository) {
-        this.solutionService = solutionService;
-        this.violationService = violationService;
-        this.orderRepository = orderRepository;
-        this.voucherRepository = voucherRepository;
-    }
+    @Qualifier("lspViolationVoucherService")
+    VoucherService violationService;
+
+    OrderRepository orderRepository;
+    VoucherRepository voucherRepository;
 
     // =========================================================
     // 1. Reset dữ liệu trong MySQL DB để test
