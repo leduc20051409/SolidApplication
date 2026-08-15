@@ -2,6 +2,7 @@ package com.leanhduc.solidapplication.service.lsp.violation;
 
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
+import com.leanhduc.solidapplication.exception.ResourceNotFoundException;
 import com.leanhduc.solidapplication.model.Order;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
@@ -28,7 +29,7 @@ public class VoucherServiceViolationImpl implements VoucherService {
     @Transactional
     public OrderResponse applyVouchers(Long orderId, ApplyVoucherRequest request) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng ID: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng ID: " + orderId));
 
         double originalAmount = order.getTotalAmount();
         double currentAmount = originalAmount;
