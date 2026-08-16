@@ -2,50 +2,64 @@ package com.leanhduc.solidapplication.service.lsp.solution;
 
 import com.leanhduc.solidapplication.dto.ApplyVoucherRequest;
 import com.leanhduc.solidapplication.dto.OrderResponse;
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
 import com.leanhduc.solidapplication.model.Voucher;
 import com.leanhduc.solidapplication.repository.OrderRepository;
 import com.leanhduc.solidapplication.repository.VoucherRepository;
+import com.leanhduc.solidapplication.service.VoucherOrderer;
 import com.leanhduc.solidapplication.service.VoucherService;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Service("lspSolutionVoucherService")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VoucherServiceImpl implements VoucherService {
 
-    private final OrderRepository orderRepository;
-    private final VoucherRepository voucherRepository;
-
-    public VoucherServiceImpl(OrderRepository orderRepository, VoucherRepository voucherRepository) {
-        this.orderRepository = orderRepository;
-        this.voucherRepository = voucherRepository;
-    }
+    OrderRepository orderRepository;
+    VoucherRepository voucherRepository;
 
     @Override
     @Transactional
     public OrderResponse applyVouchers(Long orderId, ApplyVoucherRequest request) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng ID: " + orderId));
+        Order order =
+                orderRepository
+                        .findByIdForUpdate(orderId)
+                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         double originalAmount = order.getTotalAmount();
         double currentAmount = originalAmount;
 
-        List<Voucher> vouchers = voucherRepository.findByCodeIn(request.getVoucherCodes());
+        List<Voucher> fetchedVouchers = voucherRepository.findByCodeIn(request.getVoucherCodes());
+        List<Voucher> vouchers =
+                VoucherOrderer.followRequestOrder(request.getVoucherCodes(), fetchedVouchers);
         List<String> appliedVouchers = new ArrayList<>();
         List<String> rejectedVouchers = new ArrayList<>();
         List<Voucher> updatedVouchers = new ArrayList<>();
 
         for (Voucher voucherModel : vouchers) {
             VoucherStrategy strategy = createStrategy(voucherModel);
-            Order tempOrder = new Order(order.getId(), order.getCustomerName(), currentAmount);
+            Order tempOrder =
+                    Order.builder()
+                            .id(order.getId())
+                            .customerName(order.getCustomerName())
+                            .totalAmount(currentAmount)
+                            .build();
+            VoucherApplicationResult result = strategy.apply(tempOrder);
 
-            if (strategy.canApply(tempOrder)) {
-                currentAmount = strategy.applyDiscount(tempOrder);
-                voucherModel.setUsed(true);
-                updatedVouchers.add(voucherModel);
+            if (result.applied()) {
+                currentAmount = result.finalAmount();
+                if (result.shouldMarkUsed()) {
+                    voucherModel.setUsed(true);
+                    updatedVouchers.add(voucherModel);
+                }
                 appliedVouchers.add(voucherModel.getCode());
             } else {
                 rejectedVouchers.add(voucherModel.getCode());
@@ -56,22 +70,29 @@ public class VoucherServiceImpl implements VoucherService {
         orderRepository.save(order);
         voucherRepository.saveAll(updatedVouchers);
 
-        return new OrderResponse(
-                order.getId(),
-                order.getCustomerName(),
-                originalAmount,
-                currentAmount,
-                appliedVouchers,
-                rejectedVouchers
-        );
+        return OrderResponse.builder()
+                .orderId(order.getId())
+                .customerName(order.getCustomerName())
+                .originalAmount(originalAmount)
+                .finalAmount(currentAmount)
+                .appliedVouchers(appliedVouchers)
+                .rejectedVouchers(rejectedVouchers)
+                .build();
     }
 
     private VoucherStrategy createStrategy(Voucher voucherModel) {
         if ("PERCENTAGE".equalsIgnoreCase(voucherModel.getType())) {
-            return new PercentageVoucher(voucherModel.getCode(), voucherModel.getDiscountPercent());
+            return PercentageVoucher.builder()
+                    .code(voucherModel.getCode())
+                    .discountPercent(voucherModel.getDiscountPercent())
+                    .build();
         } else if ("ONE_TIME".equalsIgnoreCase(voucherModel.getType())) {
-            return new OneTimeVoucher(voucherModel.getCode(), voucherModel.getDiscountAmount(), voucherModel.isUsed());
+            return OneTimeVoucher.builder()
+                    .code(voucherModel.getCode())
+                    .discountAmount(voucherModel.getDiscountAmount())
+                    .used(voucherModel.isUsed())
+                    .build();
         }
-        throw new IllegalArgumentException("Loại voucher không hợp lệ: " + voucherModel.getType());
+        throw new AppException(ErrorCode.INVALID_VOUCHER_TYPE);
     }
 }

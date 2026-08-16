@@ -1,24 +1,30 @@
 package com.leanhduc.solidapplication.service.lsp.solution;
 
+import com.leanhduc.solidapplication.enums.ErrorCode;
+import com.leanhduc.solidapplication.exception.AppException;
 import com.leanhduc.solidapplication.model.Order;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.experimental.FieldDefaults;
 
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PercentageVoucher implements VoucherStrategy {
-    private final String code;
-    private final double discountPercent;
+    String code;
+    double discountPercent;
 
+    @Builder
     public PercentageVoucher(String code, double discountPercent) {
+        if (!Double.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+            throw new AppException(ErrorCode.INVALID_DISCOUNT_PERCENT);
+        }
         this.code = code;
         this.discountPercent = discountPercent;
     }
 
     @Override
-    public boolean canApply(Order order) {
-        return true;
-    }
-
-    @Override
-    public double applyDiscount(Order order) {
+    public VoucherApplicationResult apply(Order order) {
         double discount = order.getTotalAmount() * (discountPercent / 100);
-        return order.getTotalAmount() - discount;
+        double finalAmount = order.getTotalAmount() - discount;
+        return VoucherApplicationResult.applied(finalAmount, false);
     }
 }
